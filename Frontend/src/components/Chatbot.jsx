@@ -242,7 +242,7 @@ const Chatbot = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="absolute bottom-20 right-0 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-xl"
+            className="absolute bottom-20 right-0 w-80 bg-white dark:bg-gray-300 rounded-lg shadow-xl"
           >
             {showAuthPrompt && (
               <div className="bg-yellow-100 p-4 text-center">
@@ -277,7 +277,7 @@ const Chatbot = () => {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                   placeholder="Ask about WaysAhead..."
-                  className="flex-1 p-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
+                  className="flex-1 p-2 border rounded-lg dark:bg-gray-100 dark:border-gray-700"
                 />
                 <button
                   onClick={handleSend}
