@@ -15,6 +15,28 @@ const Navbar = ({ darkMode, setDarkMode }) => {
   const [opencard, setOpenCard] = useState(false)
   const profileRef = useRef(null)
 
+  // Initialize dark mode from localStorage or system preference
+  useEffect(() => {
+    const savedDarkMode = localStorage.getItem('darkMode')
+    if (savedDarkMode !== null) {
+      setDarkMode(savedDarkMode === 'true')
+    } else {
+      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+      setDarkMode(systemDark)
+    }
+  }, [setDarkMode])
+
+  // Update dark mode class and localStorage when darkMode changes
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark')
+      localStorage.setItem('darkMode', 'true')
+    } else {
+      document.documentElement.classList.remove('dark')
+      localStorage.setItem('darkMode', 'false')
+    }
+  }, [darkMode])
+
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 0)
     window.addEventListener('scroll', handleScroll)
@@ -156,8 +178,8 @@ const Navbar = ({ darkMode, setDarkMode }) => {
                     onClick={handleProfileClick}
                     className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
                   >
-                    <FaUserCircle className="w-8 h-8 text-gray-600 dark:text-gray-300" />
-                    <span className="text-sm pl-2 font-medium text-gray-700 dark:text-gray-200">
+                    <FaUserCircle className="w-8 h-8 text-gray-700 dark:text-gray-700" />
+                    <span className="text-sm pl-2 font-medium text-gray-700 dark:text-gray-700">
                       {user.name.split(' ')[0]}
                     </span>
                   </button>
@@ -201,7 +223,7 @@ const Navbar = ({ darkMode, setDarkMode }) => {
               {darkMode ? (
                 <BsSun className="w-5 h-5 text-yellow-400" />
               ) : (
-                <BsMoon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                <BsMoon className="w-5 h-5 text-gray-600 dark:text-gray-600" />
               )}
             </button>
           </div>
