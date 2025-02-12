@@ -10,7 +10,7 @@ const userRoutes = require("./routes/userRoutes");
 const authRoutes = require("./routes/authRoutes");
 const chatbotRoutes = require('./routes/chatbotRoutes');
 const chatLogRoutes = require('./routes/chatLogRoutes');
-
+const contactRoutes = require('./routes/contactRoutes');
 dotenv.config(); // Load environment variables
 connectDB(); // Connect to MongoDB
 
@@ -19,6 +19,7 @@ const app = express();
 // Middleware to parse JSON
 app.use(express.json());
 app.use(cors({
+//   origin: '*',
   origin: 'https://ways-ahead.vercel.app',
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -31,6 +32,7 @@ app.use("/api/news", newsRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/chat-logs', chatLogRoutes);
+app.use('/api/contact', contactRoutes);
 
 app.get("/", (req, res) => {
   res.send("API is running...");

@@ -30,6 +30,7 @@ exports.registerUser = async (req, res) => {
 
 exports.loginUser = async (req, res) => {
   const { email, password } = req.body;
+  console.log(req.body);
   try {
     const user = await Users.findOne({ email });
     if (!user) {

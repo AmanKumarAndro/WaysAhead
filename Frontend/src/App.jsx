@@ -41,7 +41,7 @@ const ScrollToTop = () => {
 }
 
 // Layout component to handle which components to show
-const Layout = ({ children, showNavbar = true, showFooter = true, darkMode, setDarkMode }) => {
+const Layout = ({ children, showNavbar = true, showFooter = true, darkMode = true, setDarkMode }) => {
   return (
     <div className={`min-h-screen flex flex-col transition-colors duration-300 ${
       darkMode ? 'dark bg-gray-900 text-gray-100' : 'bg-white text-gray-900'

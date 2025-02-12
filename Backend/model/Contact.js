@@ -9,4 +9,6 @@ const ContactSchema = new mongoose.Schema({
     industry: { type: String, required: true },
     submittedAt: { type: Date, default: Date.now }
 });
-export default mongoose.model('Contact', ContactSchema);
+const Contact = mongoose.model('Contact', ContactSchema);
+
+module.exports = Contact;

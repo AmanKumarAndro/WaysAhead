@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { HiMenu, HiX } from 'react-icons/hi'
 import { BsSun, BsMoon } from 'react-icons/bs'
 import { useLocation, useNavigate, Link } from 'react-router-dom'
 import logo from '/images/waysahead-logo.png'
 import { FaUserCircle } from 'react-icons/fa'
+import axios from 'axios'
 
 const Navbar = ({ darkMode, setDarkMode }) => {
   const [isOpen, setIsOpen] = useState(false)
@@ -11,21 +12,42 @@ const Navbar = ({ darkMode, setDarkMode }) => {
   const location = useLocation()
   const navigate = useNavigate()
   const [user, setUser] = useState(null)
+  const [opencard, setOpenCard] = useState(false)
+  const profileRef = useRef(null)
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 0)
-    }
+    const handleScroll = () => setIsScrolled(window.scrollY > 0)
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (token) {
-      const userData = JSON.parse(atob(token.split('.')[1])) // Basic decoding
-      setUser(userData)
+    const fetchUser = async () => {
+      const token = localStorage.getItem('token')
+      if (!token) return
+      
+      try {
+        const response = await axios.get('/api/users/me', {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        setUser(response.data)
+      } catch (error) {
+        console.error('Error fetching user:', error)
+        localStorage.removeItem('token')
+        setUser(null)
+      }
     }
+    fetchUser()
+  }, [])
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setOpenCard(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
   const navLinks = [
@@ -52,19 +74,16 @@ const Navbar = ({ darkMode, setDarkMode }) => {
   const handleNavigation = (link) => {
     if (location.pathname === '/') {
       const element = document.getElementById(link.path)
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' })
-      }
+      element?.scrollIntoView({ behavior: 'smooth' })
     } else {
       navigate('/')
       setTimeout(() => {
         const element = document.getElementById(link.path)
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth' })
-        }
+        element?.scrollIntoView({ behavior: 'smooth' })
       }, 100)
     }
     setIsOpen(false)
+    setOpenCard(false)
   }
 
   const currentLinks = location.pathname === '/' ? homeNavLinks : navLinks
@@ -72,42 +91,28 @@ const Navbar = ({ darkMode, setDarkMode }) => {
   const handleLogout = () => {
     localStorage.removeItem('token')
     setUser(null)
-    window.location.href = '/login' // Redirect to login
+    setOpenCard(false)
+    navigate('/login')
   }
 
   const handleProfileClick = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
+    if (!localStorage.getItem('token')) return
     
     try {
-      const response = await fetch('/api/users/me', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (response.ok) {
-        const userDetails = await response.json();
-        handleOpenCard()
-        setUser(userDetails); // Set user details to state
-      } else {
-        console.error('Failed to fetch user details');
-      }
+      const response = await axios.get('/api/users/me', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      })
+      setUser(response.data)
+      setOpenCard(prev => !prev)
     } catch (error) {
-      console.error('Error fetching user details:', error);
+      console.error('Error fetching user details:', error)
+      handleLogout()
     }
-  };
-  const [opencard, setOpenCard] = useState(false)
-  const handleOpenCard = () => {
-    setOpenCard(!opencard)
   }
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-      isScrolled
-        ? 'bg-white dark:bg-gray-900 shadow-lg'
-        : 'bg-transparent'
+      isScrolled ? 'bg-white dark:bg-gray-900 shadow-lg' : 'bg-transparent'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
@@ -115,7 +120,7 @@ const Navbar = ({ darkMode, setDarkMode }) => {
             <div className="flex-shrink-0">
               <button 
                 onClick={() => handleNavigation({ name: 'Home', path: 'hero' })}
-                className="flex items-center"
+                className="flex items-center hover:opacity-80 transition-opacity"
               >
                 <img 
                   src={logo}
@@ -136,61 +141,77 @@ const Navbar = ({ darkMode, setDarkMode }) => {
                 key={link.name}
                 onClick={() => handleNavigation(link)}
                 className={`${
-                  isScrolled
-                    ? 'text-gray-700 dark:text-gray-300'
-                    : 'text-white'
+                  isScrolled ? 'text-gray-700 dark:text-gray-300' : 'text-white'
                 } hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors`}
               >
                 {link.name}
               </button>
             ))}
 
-            {/* Profile Card */}
-            {user ? (
-              <div className="relative">
-                <FaUserCircle className="w-8 h-8 mr-4 cursor-pointer" onClick={handleProfileClick} />
-                {opencard&&<>
-                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-lg p-4">
-                  <h3 className="font-bold text-gray-800 dark:text-gray-200">{user.name}</h3>
-                  <p className="text-gray-600 dark:text-gray-400">{user.email}</p>
-                  <p className="text-gray-600 dark:text-gray-400">{user.address || 'No address provided'}</p>
-                  <button onClick={handleLogout} className="mt-2 text-sm text-red-500 hover:underline">Logout</button>
-                </div></>}
-              </div>
-            ) : (
-              <Link
-                to="/login"
-                className={`ml-4 px-4 py-2 rounded-lg ${
-                  isScrolled
-                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                    : 'bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm'
-                } transition-all duration-300 text-sm font-medium`}
-              >
-                Login
-              </Link>
-            )}
+            {/* Profile Section */}
+            <div className="relative ml-4" ref={profileRef}>
+              {user ? (
+                <>
+                  <button 
+                    onClick={handleProfileClick}
+                    className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+                  >
+                    <FaUserCircle className="w-8 h-8 text-gray-600 dark:text-gray-300" />
+                    <span className="text-sm pl-2 font-medium text-gray-700 dark:text-gray-200">
+                      {user.name.split(' ')[0]}
+                    </span>
+                  </button>
+                  
+                  {opencard && (
+                    <div className="absolute right-0 mt-2 w-64 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl p-4 space-y-3">
+                      <div className="text-center">
+                        <h3 className="font-semibold text-gray-800 dark:text-gray-100 truncate">{user.name}</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 truncate">{user.email}</p>
+                      </div>
+                      <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                        <button 
+                          onClick={handleLogout}
+                          className="w-full px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                        >
+                          Logout
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <Link
+                  to="/login"
+                  className={`px-4 py-2 rounded-lg ${
+                    isScrolled ? 'bg-blue-600 hover:bg-blue-700' : 'bg-white/10 hover:bg-white/20'
+                  } text-white backdrop-blur-sm transition-all duration-300 text-sm font-medium`}
+                >
+                  Login
+                </Link>
+              )}
+            </div>
 
             {/* Theme Toggle */}
             <button
               onClick={() => setDarkMode(!darkMode)}
               className={`p-2 rounded-lg ${
-                isScrolled
-                  ? 'hover:bg-gray-100 dark:hover:bg-gray-800'
-                  : 'hover:bg-white/10'
+                isScrolled ? 'hover:bg-gray-100 dark:hover:bg-gray-800' : 'hover:bg-white/10'
               } transition-colors`}
             >
-              {darkMode ? <BsSun className="w-5 h-5" /> : <BsMoon className="w-5 h-5" />}
+              {darkMode ? (
+                <BsSun className="w-5 h-5 text-yellow-400" />
+              ) : (
+                <BsMoon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+              )}
             </button>
           </div>
 
-          {/* Mobile menu button */}
+          {/* Mobile Menu Button */}
           <div className="flex md:hidden items-center space-x-2">
             <button
               onClick={() => setDarkMode(!darkMode)}
               className={`p-2 rounded-lg ${
-                isScrolled
-                  ? 'hover:bg-gray-100 dark:hover:bg-gray-800'
-                  : 'hover:bg-white/10'
+                isScrolled ? 'hover:bg-gray-100 dark:hover:bg-gray-800' : 'hover:bg-white/10'
               } transition-colors`}
             >
               {darkMode ? <BsSun className="w-5 h-5" /> : <BsMoon className="w-5 h-5" />}
@@ -198,9 +219,7 @@ const Navbar = ({ darkMode, setDarkMode }) => {
             <button
               onClick={() => setIsOpen(!isOpen)}
               className={`inline-flex items-center justify-center p-2 rounded-md ${
-                isScrolled
-                  ? 'text-gray-700 dark:text-gray-300'
-                  : 'text-white'
+                isScrolled ? 'text-gray-700 dark:text-gray-300' : 'text-white'
               } hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none`}
             >
               {isOpen ? <HiX className="w-6 h-6" /> : <HiMenu className="w-6 h-6" />}
@@ -222,12 +241,21 @@ const Navbar = ({ darkMode, setDarkMode }) => {
                 {link.name}
               </button>
             ))}
-            {/* Mobile Login Button */}
+            
+            {/* Mobile Profile Section */}
             {user ? (
-              <>
-                <FaUserCircle className="w-8 h-8 mr-4 cursor-pointer" onClick={handleProfileClick} />
-                <button onClick={handleLogout} className="block w-full text-center px-3 py-2 rounded-md text-base font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors mt-2">Logout</button>
-              </>
+              <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                <div className="px-4 py-3">
+                  <h3 className="text-sm font-medium text-gray-800 dark:text-gray-200">{user.name}</h3>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 truncate">{user.email}</p>
+                </div>
+                <button 
+                  onClick={handleLogout}
+                  className="w-full mt-2 px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                >
+                  Logout
+                </button>
+              </div>
             ) : (
               <Link
                 to="/login"

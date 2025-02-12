@@ -1,29 +1,43 @@
-import express from 'express';
-import Contact from '../model/Contact.js';
-import nodemailer from 'nodemailer';
+const express = require('express');
+const Contact = require('../model/Contact');
+const nodemailer = require('nodemailer');
 
 const router = express.Router();
 
 // Configure Nodemailer transporter
 const transporter = nodemailer.createTransport({
-  service: 'Gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
 });
 
-router.post('/', async (req, res) => {
-  try {
-    const newContact = new Contact(req.body);
-    await newContact.save();
+// Middleware to validate request body
+const validateContact = (req, res, next) => {
+    const { name, email, phone, message, region, industry } = req.body;
+    if (!name || !email || !phone || !message || !region || !industry) {
+        return res.status(400).json({
+            success: false,
+            message: 'All fields are required.'
+        });
+    }
+    next();
+};
 
-    // Send auto-reply email
-    const mailOptions = {
-      from: `"WaysAhead Global" <${process.env.EMAIL_USER}>`,
-      to: newContact.email,
-      subject: 'Thank you for contacting WaysAhead Global',
-      html: `
+router.post('/', validateContact, async (req, res) => {
+    try {
+        const newContact = new Contact(req.body);
+        await newContact.save();
+
+        // Send auto-reply email
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: newContact.email,
+            subject: 'Thank you for contacting WaysAhead Global',
+            html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #1a365d;">Dear ${newContact.name},</h2>
           <p>Thank you for reaching out to WaysAhead Global. We've received your message regarding:</p>
@@ -38,22 +52,22 @@ router.post('/', async (req, res) => {
           </p>
         </div>
       `
-    };
+        };
 
-    await transporter.sendMail(mailOptions);
-    
-    res.status(201).json({
-      success: true,
-      message: 'Message received. Check your email for confirmation.'
-    });
+        await transporter.sendMail(mailOptions);
 
-  } catch (error) {
-    console.error('Contact submission error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error processing your request'
-    });
-  }
+        res.status(201).json({
+            success: true,
+            message: 'Message received. Check your email for confirmation.'
+        });
+
+    } catch (error) {
+        console.error('Contact submission error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error processing your request'
+        });
+    }
 });
 
-export default router; 
+module.exports = router; 

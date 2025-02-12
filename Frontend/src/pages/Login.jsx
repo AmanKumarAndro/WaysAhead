@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { FcGoogle } from 'react-icons/fc'
 import { FaFacebook } from 'react-icons/fa'
+import axios from 'axios'
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -21,27 +22,25 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
+      const response = await axios.post('/api/auth/login', {
+        email: formData.email,
+        password: formData.password,
+      }, {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('token', data.token); // Store token
-        window.location.href = '/'; // Redirect to home
-      } else {
-        // Handle login error
-        console.error('Login failed');
-      }
+      localStorage.setItem('token', response.data.token); // Store token
+      window.location.href = '/'; // Redirect to home
     } catch (error) {
-      console.error('Error during login:', error);
+      if (error.response) {
+        // Handle HTTP errors
+        console.error('Login failed:', error.response.data.message);
+      } else {
+        // Handle network errors
+        console.error('Error during login:', error.message);
+      }
     }
   }
 
@@ -110,12 +109,12 @@ const Login = () => {
             type="submit"
             className="w-full py-3 px-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-lg transition-all duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-gray-900"
           >
-            Next
+            Login
           </button>
         </form>
 
         {/* Social Login */}
-        <div className="mt-8">
+        {/* <div className="mt-8">
           <div className="flex items-center justify-center space-x-4">
             <button className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
               <FcGoogle className="w-6 h-6" />
@@ -124,7 +123,7 @@ const Login = () => {
               <FaFacebook className="w-6 h-6 text-[#1877F2]" />
             </button>
           </div>
-        </div>
+        </div> */}
 
         {/* Footer Links */}
         <div className="mt-8 text-center">
