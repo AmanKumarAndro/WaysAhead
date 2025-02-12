@@ -3,6 +3,7 @@ import { Section, Container } from '../components/shared'
 import { HiMail, HiOfficeBuilding } from 'react-icons/hi'
 import { useState } from 'react'
 import { toast } from 'react-toastify'
+import axios from 'axios'
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -13,6 +14,7 @@ const Contact = () => {
     region: '',
     industry: ''
   });
+  const [submissionStatus, setSubmissionStatus] = useState(null);
 
   const locations = [
     {
@@ -50,23 +52,21 @@ const Contact = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('/api/contact', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-      if (response.ok) {
-        toast.success('Message sent successfully!');
-        console.log('Message sent successfully');
-      } else {
-        toast.error('Error sending message. Please try again.');
-        console.error('Error sending message');
+      const response = await axios.post('/api/contact', formData);
+      if (response.data.success) {
+        setSubmissionStatus('success');
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          message: '',
+          region: '',
+          industry: ''
+        });
       }
     } catch (error) {
-      toast.error('Error: Please try again later.');
-      console.error('Error:', error);
+      setSubmissionStatus('error');
+      console.error('Submission error:', error);
     }
   };
 
@@ -104,6 +104,16 @@ const Contact = () => {
               className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg"
             >
               <h2 className="text-2xl font-bold mb-6">Know More</h2>
+              {submissionStatus === 'success' && (
+                <div className="bg-green-100 p-4 mb-4 rounded-lg">
+                  Message sent successfully! Check your email for confirmation.
+                </div>
+              )}
+              {submissionStatus === 'error' && (
+                <div className="bg-red-100 p-4 mb-4 rounded-lg">
+                  Error sending message. Please try again.
+                </div>
+              )}
               <form className="space-y-6" onSubmit={handleSubmit}>
                 <div className="grid md:grid-cols-2 gap-6">
                   {/* Region Selection */}
