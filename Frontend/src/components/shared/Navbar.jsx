@@ -49,7 +49,7 @@ const Navbar = ({ darkMode, setDarkMode }) => {
       if (!token) return
       
       try {
-        const response = await axios.get('/api/users/me', {
+        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/users/me`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         setUser(response.data)
