@@ -1,57 +1,50 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import mongoose from 'mongoose';
-import jobRoutes from './routes/jobRoutes.js';
-import contactRoutes from './routes/contactRoutes.js';
-import newsRoutes from './routes/newsRoutes.js';
-import chatbotRoutes from './routes/chatbotRoutes.js';
-import authRoutes from './routes/authRoutes.js';
-import { createServer } from 'http';
-import { Server } from 'socket.io';
-import multer from 'multer';
+const express = require("express");
+const dotenv = require("dotenv");
+const connectDB = require("./db");
+const mongoose = require("mongoose");
+const cors = require("cors");
 
-dotenv.config();
+const jobRoutes = require("./routes/jobRoutes");
+const newsRoutes = require("./routes/newsRoutes");
+const userRoutes = require("./routes/userRoutes"); 
+const authRoutes = require("./routes/authRoutes");
+const chatbotRoutes = require('./routes/chatbotRoutes');
+const chatLogRoutes = require('./routes/chatLogRoutes');
+
+dotenv.config(); // Load environment variables
+connectDB(); // Connect to MongoDB
 
 const app = express();
-const httpServer = createServer(app);
-const io = new Server(httpServer, {
-    cors: {
-        origin: '*'
-    }
-});
 
-app.use(cors());
+// Middleware to parse JSON
 app.use(express.json());
-
-// File Upload Setup
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, 'uploads/'),
-    filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`)
-});
-const upload = multer({ storage });
-app.post('/api/upload', upload.single('resume'), (req, res) => {
-    res.json({ filePath: `/uploads/${req.file.filename}` });
-});
-
-// Database Connection
-mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-}).then(() => console.log('MongoDB Connected')).catch(err => console.log(err));
+app.use(cors({
+  origin: 'http://localhost:3000',
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // Routes
-app.use('/api/jobs', jobRoutes);
-app.use('/api/contact', contactRoutes);
-app.use('/api/news', newsRoutes);
-app.use('/api/chatbot', chatbotRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/jobs", jobRoutes);
+app.use("/api/news", newsRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/chatbot', chatbotRoutes);
+app.use('/api/chat-logs', chatLogRoutes);
 
-// WebSocket Setup
-io.on('connection', (socket) => {
-    console.log('New client connected');
-    socket.on('disconnect', () => console.log('Client disconnected'));
+app.get("/", (req, res) => {
+  res.send("API is running...");
 });
 
-const PORT = process.env.PORT || 5000;
-httpServer.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Add this after mongoose connection
+mongoose.connection.on('connected', () => {
+  console.log('MongoDB connected successfully');
+});
+mongoose.connection.on('error', (err) => {
+  console.error('MongoDB connection error:', err);
+});
+
+const PORT = process.env.PORT;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});

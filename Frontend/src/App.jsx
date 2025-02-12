@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
 import { Navbar, Footer } from './components/shared'
+import { ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
+import Chatbot from './components/Chatbot'
 
 // Pages
 import Home from './pages/Home'
@@ -14,6 +17,9 @@ import InStoreAnalytics from './pages/InStoreAnalytics'
 import SCMAnalytics from './pages/SCMAnalytics'
 import VideoAnalytics from './pages/VideoAnalytics'
 import Robotics from './pages/Robotics'
+import Register from './pages/Register'
+import JobPostings from './pages/JobPostings'
+import News from './pages/News'
 // import About from './pages/About'
 // import Services from './pages/Services'
 // import UseCases from './pages/UseCases'
@@ -149,6 +155,30 @@ const AppContent = ({ darkMode, setDarkMode }) => {
           </Layout>
         } 
       />
+      <Route 
+        path="/signup" 
+        element={
+          <Layout darkMode={darkMode} setDarkMode={setDarkMode}>
+            <Register />
+          </Layout>
+        } 
+      />
+      <Route 
+        path="/job-postings" 
+        element={
+          <Layout darkMode={darkMode} setDarkMode={setDarkMode}>
+            <JobPostings />
+          </Layout>
+        } 
+      />
+      <Route 
+        path="/news" 
+        element={
+          <Layout darkMode={darkMode} setDarkMode={setDarkMode}>
+            <News />
+          </Layout>
+        } 
+      />
       {/* <Route path="/about" element={<About />} />
       <Route path="/services" element={<Services />} />
       <Route path="/use-cases" element={<UseCases />} />
@@ -178,6 +208,18 @@ function App() {
     <Router>
       <ScrollToTop />
       <AppContent darkMode={darkMode} setDarkMode={setDarkMode} />
+      <Chatbot />
+      <ToastContainer 
+        position="top-right" 
+        autoClose={5000} 
+        hideProgressBar={false} 
+        newestOnTop={false} 
+        closeOnClick 
+        rtl={false} 
+        pauseOnFocusLoss 
+        draggable 
+        pauseOnHover 
+      />
     </Router>
   )
 }

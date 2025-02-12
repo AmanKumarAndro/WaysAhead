@@ -10,13 +10,16 @@ const Footer = () => {
           {/* Addresses */}
           <div className="lg:col-span-2 space-y-8">
             {Object.values(footerData.addresses).map((location) => (
-              <div key={location.title}>
-                <h6 className="text-sm font-semibold mb-2 text-gray-400">
-                  {location.title}
-                </h6>
-                <p className="text-sm text-gray-300 whitespace-pre-line">
-                  {location.address}
-                </p>
+              <div key={location.title} className="flex items-center">
+                <img src={location.image} alt={location.title} className="h-4 w-auto mr-2" />
+                <div>
+                  <h6 className="text-sm font-semibold mb-2 text-gray-400">
+                    {location.title}
+                  </h6>
+                  <p className="text-sm text-gray-300 whitespace-pre-line">
+                    {location.address}
+                  </p>
+                </div>
               </div>
             ))}
           </div>

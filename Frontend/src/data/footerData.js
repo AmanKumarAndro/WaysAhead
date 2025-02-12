@@ -2,15 +2,18 @@ export const footerData = {
   addresses: {
     singapore: {
       title: 'Singapore',
-      address: '68 Circular Road, #02-01\nSingapore, 049422'
+      address: '68 Circular Road, #02-01\nSingapore, 049422',
+      image: 'https://flagcdn.com/w40/sg.png'
     },
     uae: {
       title: 'United Arab Emirates',
-      address: 'A4/1032 Al Hamra RAKEZ\nRas Al Khaimah, UAE'
+      address: 'A4/1032 Al Hamra RAKEZ\nRas Al Khaimah, UAE',
+      image: 'https://flagcdn.com/w40/ae.png'
     },
     india: {
       title: 'India',
-      address: '2nd Floor, Regal Building,\nConnaught Place, Delhi 110001'
+      address: '2nd Floor, Regal Building,\nConnaught Place, Delhi 110001',
+      image: 'https://flagcdn.com/w40/in.png'
     }
   },
   links: {

@@ -1,8 +1,19 @@
 import { motion } from 'framer-motion'
 import { Section, Container } from '../components/shared'
 import { HiMail, HiOfficeBuilding } from 'react-icons/hi'
+import { useState } from 'react'
+import { toast } from 'react-toastify'
 
 const Contact = () => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    message: '',
+    region: '',
+    industry: ''
+  });
+
   const locations = [
     {
       country: 'Singapore',
@@ -30,6 +41,34 @@ const Contact = () => {
     'Bahrain', 'Kuwait', 'Oman', 'Qatar', 'Vietnam', 'Indonesia', 
     'Malaysia', 'Rest of the world'
   ]
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+      if (response.ok) {
+        toast.success('Message sent successfully!');
+        console.log('Message sent successfully');
+      } else {
+        toast.error('Error sending message. Please try again.');
+        console.error('Error sending message');
+      }
+    } catch (error) {
+      toast.error('Error: Please try again later.');
+      console.error('Error:', error);
+    }
+  };
 
   return (
     <>
@@ -65,12 +104,17 @@ const Contact = () => {
               className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg"
             >
               <h2 className="text-2xl font-bold mb-6">Know More</h2>
-              <form className="space-y-6">
+              <form className="space-y-6" onSubmit={handleSubmit}>
                 <div className="grid md:grid-cols-2 gap-6">
                   {/* Region Selection */}
                   <div>
                     <label className="block text-sm font-medium mb-2">Region</label>
-                    <select className="w-full p-3 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600">
+                    <select 
+                      name="region"
+                      value={formData.region}
+                      onChange={handleChange}
+                      className="w-full p-3 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600"
+                    >
                       <option value="">Select Region</option>
                       {regions.map(region => (
                         <option key={region} value={region}>{region}</option>
@@ -81,7 +125,12 @@ const Contact = () => {
                   {/* Industry Selection */}
                   <div>
                     <label className="block text-sm font-medium mb-2">Industry</label>
-                    <select className="w-full p-3 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600">
+                    <select 
+                      name="industry"
+                      value={formData.industry}
+                      onChange={handleChange}
+                      className="w-full p-3 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600"
+                    >
                       <option value="">Select Industry</option>
                       {industries.map(industry => (
                         <option key={industry} value={industry}>{industry}</option>
@@ -94,27 +143,40 @@ const Contact = () => {
                 <div className="space-y-4">
                   <input
                     type="text"
+                    name="name"
                     placeholder="Your Name"
+                    value={formData.name}
+                    onChange={handleChange}
                     className="w-full p-3 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600"
                   />
                   <input
                     type="email"
+                    name="email"
                     placeholder="Email Address"
+                    value={formData.email}
+                    onChange={handleChange}
                     className="w-full p-3 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600"
                   />
                   <input
                     type="tel"
+                    name="phone"
                     placeholder="Phone Number"
+                    value={formData.phone}
+                    onChange={handleChange}
                     className="w-full p-3 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600"
                   />
                   <textarea
+                    name="message"
                     rows="4"
                     placeholder="Your Message"
+                    value={formData.message}
+                    onChange={handleChange}
                     className="w-full p-3 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600"
                   ></textarea>
                 </div>
 
                 <motion.button
+                  type="submit"
                   whileHover={{ 
                     scale: 1.05,
                     boxShadow: "0 0 8px rgba(255,255,255,0.3)"

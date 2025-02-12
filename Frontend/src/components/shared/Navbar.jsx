@@ -3,12 +3,14 @@ import { HiMenu, HiX } from 'react-icons/hi'
 import { BsSun, BsMoon } from 'react-icons/bs'
 import { useLocation, useNavigate, Link } from 'react-router-dom'
 import logo from '/images/waysahead-logo.png'
+import { FaUserCircle } from 'react-icons/fa'
 
 const Navbar = ({ darkMode, setDarkMode }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
+  const [user, setUser] = useState(null)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -16,6 +18,14 @@ const Navbar = ({ darkMode, setDarkMode }) => {
     }
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      const userData = JSON.parse(atob(token.split('.')[1])) // Basic decoding
+      setUser(userData)
+    }
   }, [])
 
   const navLinks = [
@@ -41,13 +51,11 @@ const Navbar = ({ darkMode, setDarkMode }) => {
 
   const handleNavigation = (link) => {
     if (location.pathname === '/') {
-      // If on home page, scroll to section
       const element = document.getElementById(link.path)
       if (element) {
         element.scrollIntoView({ behavior: 'smooth' })
       }
     } else {
-      // If on other pages, navigate to home and then scroll
       navigate('/')
       setTimeout(() => {
         const element = document.getElementById(link.path)
@@ -60,6 +68,40 @@ const Navbar = ({ darkMode, setDarkMode }) => {
   }
 
   const currentLinks = location.pathname === '/' ? homeNavLinks : navLinks
+
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    setUser(null)
+    window.location.href = '/login' // Redirect to login
+  }
+
+  const handleProfileClick = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+      const response = await fetch('/api/users/me', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      if (response.ok) {
+        const userDetails = await response.json();
+        handleOpenCard()
+        setUser(userDetails); // Set user details to state
+      } else {
+        console.error('Failed to fetch user details');
+      }
+    } catch (error) {
+      console.error('Error fetching user details:', error);
+    }
+  };
+  const [opencard, setOpenCard] = useState(false)
+  const handleOpenCard = () => {
+    setOpenCard(!opencard)
+  }
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -103,17 +145,30 @@ const Navbar = ({ darkMode, setDarkMode }) => {
               </button>
             ))}
 
-            {/* Login Button */}
-            <Link
-              to="/login"
-              className={`ml-4 px-4 py-2 rounded-lg ${
-                isScrolled
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                  : 'bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm'
-              } transition-all duration-300 text-sm font-medium`}
-            >
-              Login
-            </Link>
+            {/* Profile Card */}
+            {user ? (
+              <div className="relative">
+                <FaUserCircle className="w-8 h-8 mr-4 cursor-pointer" onClick={handleProfileClick} />
+                {opencard&&<>
+                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-lg p-4">
+                  <h3 className="font-bold text-gray-800 dark:text-gray-200">{user.name}</h3>
+                  <p className="text-gray-600 dark:text-gray-400">{user.email}</p>
+                  <p className="text-gray-600 dark:text-gray-400">{user.address || 'No address provided'}</p>
+                  <button onClick={handleLogout} className="mt-2 text-sm text-red-500 hover:underline">Logout</button>
+                </div></>}
+              </div>
+            ) : (
+              <Link
+                to="/login"
+                className={`ml-4 px-4 py-2 rounded-lg ${
+                  isScrolled
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                    : 'bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm'
+                } transition-all duration-300 text-sm font-medium`}
+              >
+                Login
+              </Link>
+            )}
 
             {/* Theme Toggle */}
             <button
@@ -168,12 +223,19 @@ const Navbar = ({ darkMode, setDarkMode }) => {
               </button>
             ))}
             {/* Mobile Login Button */}
-            <Link
-              to="/login"
-              className="block w-full text-center px-3 py-2 rounded-md text-base font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors mt-2"
-            >
-              Login
-            </Link>
+            {user ? (
+              <>
+                <FaUserCircle className="w-8 h-8 mr-4 cursor-pointer" onClick={handleProfileClick} />
+                <button onClick={handleLogout} className="block w-full text-center px-3 py-2 rounded-md text-base font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors mt-2">Logout</button>
+              </>
+            ) : (
+              <Link
+                to="/login"
+                className="block w-full text-center px-3 py-2 rounded-md text-base font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors mt-2"
+              >
+                Login
+              </Link>
+            )}
           </div>
         </div>
       )}
