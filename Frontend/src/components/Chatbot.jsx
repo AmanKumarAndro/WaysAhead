@@ -168,7 +168,7 @@ const Chatbot = () => {
     }
 
     // Log unresolved question
-    axios.post(`${API_BASE_URL}/chat-logs`, {
+    axios.post(`${API_BASE_URL}/api/chat-logs`, {
       message: query,
       response: 'UNRESOLVED',
       unresolved: true
@@ -195,7 +195,7 @@ const Chatbot = () => {
       const userData = JSON.parse(atob(token.split('.')[1]));
       
       // Save chat log to backend
-      const logResponse = await axios.post(`${API_BASE_URL}/chat-logs`, {
+      const logResponse = await axios.post(`${API_BASE_URL}/api/chat-logs`, {
         userId: userData.id,
         message: input,
         response: 'PENDING'
@@ -209,7 +209,7 @@ const Chatbot = () => {
       setMessages(prev => [...prev, botMessage]);
       
       // Update chat log with actual response
-      await axios.patch(`${API_BASE_URL}/chat-logs/${logResponse.data._id}`, {
+      await axios.patch(`${API_BASE_URL}/api/chat-logs/${logResponse.data._id}`, {
         response: response,
         unresolved: response === knowledgeBase.default.response
       });
